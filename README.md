@@ -1,86 +1,87 @@
-# Playbook-LDAP
-# Playbook de Despliegue Técnico  
-## Instalación y configuración de OpenLDAP
+# Playbook de Despliegue Técnico
+## Instalación, configuración y puesta en marcha de OpenLDAP
 
-**Alumno/a:** Raul Ortiz  
-**Módulo / Práctica:** Servicio de directorio OpenLDAP  
-**Fecha:** 09/10/2026  
-**Entorno:** Máquina virtual Ubuntu Server en VirtualBox  
+**Alumno:** Raul Ortiz  
+**Entorno:** Ubuntu Server 24.04.5 LTS sobre Oracle VirtualBox  
+**Servicio desplegado:** OpenLDAP  
+**Fecha de realización:** 09/10/2026  
 
 ---
 
 ## A. Ficha Técnica y Prerrequisitos del Entorno
 
-### A.1. Resumen del entorno
+### A.1. Resumen técnico
 
-| Elemento | Configuración |
+| Elemento | Configuración aplicada |
 |---|---|
 | Hipervisor | Oracle VirtualBox |
-| Sistema operativo | Ubuntu Server |
+| Sistema operativo | Ubuntu Server 24.04.5 LTS |
+| Nombre del equipo | `UbuntuServer` |
 | Tipo de red | Red NAT sin DHCP |
-| Dirección IP estática | `20.0.0.5/24` |
 | Interfaz de red | `enp0s3` |
+| Dirección IP estática | `20.0.0.5/24` |
+| Puerta de enlace | `20.0.0.1` |
+| DNS configurados | `20.0.0.1` y `8.8.8.8` |
 | FQDN | `ldapserver.planetafp.local` |
 | Alias | `ldapserver` |
-| Dominio del directorio | `planetafp.local` |
+| Dominio LDAP | `planetafp.local` |
 | Base DN | `dc=planetafp,dc=local` |
 | Organización | `planetafp` |
-| Administrador LDAP | `cn=admin,dc=planetafp,dc=local` |
-| Paquetes instalados | `slapd`, `ldap-utils`, `libldap-common` |
+| Cuenta administradora | `cn=admin,dc=planetafp,dc=local` |
+| Paquetes instalados | `slapd`, `ldap-utils`, `libldap-common`, `libldap2` |
 | Puerto LDAP | `389/tcp` |
+| Versión OpenLDAP | `2.6.10+dfsg-0ubuntu0.24.04.1` |
 
-### A.2. Descripción del servicio de directorio
+### A.2. Servicio y componentes
 
-OpenLDAP es una implementación open source del protocolo LDAP (*Lightweight Directory Access Protocol*), utilizado para almacenar y consultar información jerárquica como usuarios, grupos, unidades organizativas y credenciales.
+OpenLDAP es una implementación de código abierto del protocolo LDAP (*Lightweight Directory Access Protocol*). Permite guardar y consultar información organizada de forma jerárquica, por ejemplo usuarios, unidades organizativas, grupos y atributos de autenticación.
 
-Los componentes principales son:
+Los componentes principales desplegados son:
 
-- **slapd**: demonio servidor LDAP. Escucha peticiones en el puerto 389 y gestiona la base de datos del directorio.
-- **ldap-utils**: conjunto de herramientas cliente, como `ldapadd`, `ldapsearch`, `ldapmodify` y `ldapdelete`.
-- **libldap**: librerías necesarias para que las aplicaciones y utilidades se comuniquen mediante el protocolo LDAP.
-- **Esquemas**: definen los tipos de objetos y atributos permitidos en el directorio, como `inetOrgPerson`, `organizationalUnit` o `posixAccount`.
+- **`slapd`**: daemon o servicio servidor LDAP; recibe peticiones de los clientes y gestiona el directorio.
+- **`ldap-utils`**: herramientas de línea de comandos para administrar el directorio, como `ldapadd`, `ldapsearch`, `ldapdelete`, `ldapmodify` y `ldapwhoami`.
+- **`libldap`**: bibliotecas utilizadas por aplicaciones y utilidades cliente para comunicarse con el servicio LDAP.
+- **Esquemas LDAP**: definen las clases de objeto y los atributos admitidos por las entradas del directorio.
 
-### A.3. Capturas de prerrequisitos
+### A.3. Evidencia del sistema operativo
 
-**Captura 1 — Versión del sistema operativo**
+Se comprobó la versión del sistema operativo antes de iniciar el despliegue.
 
 ```bash
 lsb_release -a
 ```
 
-`[ INSERTAR CAPTURA ]`
+![Figura 1 — Información del sistema Ubuntu Server](./Captura-de-pantalla-2026-10-09-183525.jpg)
 
-**Captura 2 — Paquetes instalados**
+*Figura 1. Ubuntu Server 24.04.5 LTS, nombre en clave `noble`.*
+
+### A.4. Evidencia de paquetes instalados
+
+Se verificó que los paquetes requeridos para el servicio LDAP estaban instalados.
 
 ```bash
 dpkg -l | grep -E "slapd|ldap-utils|libldap"
 ```
 
-`[ INSERTAR CAPTURA ]`
+![Figura 2 — Paquetes LDAP instalados](./Captura-de-pantalla-2026-10-09-183539.jpg)
+
+*Figura 2. Paquetes `slapd`, `ldap-utils`, `libldap-common` y `libldap2` instalados.*
 
 ---
 
 ## B. Procedimiento de Despliegue Paso a Paso
 
-### Paso 1 — Configuración de red estática con Netplan
+### Paso 1. Configuración de red estática con Netplan
 
-En Ubuntu Server, la configuración de red se define mediante Netplan en archivos YAML ubicados en `/etc/netplan/`.
+La máquina virtual se configuró con Red NAT sin DHCP. Para mantener una dirección permanente para el servidor LDAP se asignó la IP estática `20.0.0.5/24`.
 
-1. Identificar la interfaz de red:
+El archivo configurado fue:
 
-```bash
-ip a
+```text
+/etc/netplan/50-cloud-init.yaml
 ```
 
-`[ INSERTAR CAPTURA: interfaz enp0s3 ]`
-
-2. Crear el archivo de configuración:
-
-```bash
-sudo nano /etc/netplan/01-ldap.yaml
-```
-
-3. Añadir el siguiente contenido:
+Configuración aplicada:
 
 ```yaml
 network:
@@ -99,280 +100,207 @@ network:
           - 8.8.8.8
 ```
 
-4. Aplicar la configuración:
+Después de guardar el fichero, se aplicó la configuración:
 
 ```bash
 sudo netplan apply
 ```
 
-5. Verificar la configuración:
+#### Evidencia de Netplan
 
-```bash
-ip a
-ip route
-```
+![Figura 3 — Archivo de configuración Netplan](./Captura-de-pantalla-2026-10-09-183551.jpg)
 
-**Captura 3 — Archivo Netplan**
+*Figura 3. Configuración estática de la interfaz `enp0s3`: IP `20.0.0.5/24`, gateway `20.0.0.1` y DNS configurados.*
 
-```bash
-cat /etc/netplan/01-ldap.yaml
-```
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 4 — Aplicación de Netplan**
-
-```bash
-sudo netplan apply
-```
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 5 — IP estática asignada**
+#### Verificación de dirección IP
 
 ```bash
 ip a
 ```
 
-Debe verse:
+![Figura 4 — Dirección IP estática](./Captura-de-pantalla-2026-10-09-183646.jpg)
 
-```text
-inet 20.0.0.5/24
-```
+*Figura 4. La interfaz `enp0s3` tiene asignada la IP estática `20.0.0.5/24`.*
 
-`[ INSERTAR CAPTURA ]`
-
-**Captura 6 — Tabla de rutas**
+#### Verificación de rutas
 
 ```bash
 ip route
 ```
 
-`[ INSERTAR CAPTURA ]`
+![Figura 5 — Tabla de enrutamiento](./Captura-de-pantalla-2026-10-09-183714.jpg)
+
+*Figura 5. La ruta por defecto utiliza la puerta de enlace `20.0.0.1` a través de la interfaz `enp0s3`.*
 
 ---
 
-### Paso 2 — Resolución de nombres local
+### Paso 2. Configuración de resolución de nombres local
 
-Se añade el FQDN y el alias al archivo `/etc/hosts` para que el sistema pueda resolver el nombre del servidor sin depender de un servidor DNS externo.
+Al no disponer de un DNS interno para el dominio `planetafp.local`, se configuró la resolución local mediante el fichero `/etc/hosts`.
 
-1. Editar el archivo:
-
-```bash
-sudo nano /etc/hosts
-```
-
-2. Añadir la siguiente línea:
+Se añadió la siguiente entrada:
 
 ```text
 20.0.0.5    ldapserver.planetafp.local ldapserver
 ```
 
-3. Guardar y comprobar:
+Esta entrada permite utilizar tanto el FQDN como el alias corto para localizar el servidor LDAP sin necesitar un servidor DNS externo.
 
-```bash
-ping -c 3 ldapserver.planetafp.local
-ping -c 3 ldapserver
-```
-
-**Justificación:** esta configuración permite que el servidor se identifique correctamente mediante su FQDN, evita errores de resolución durante la configuración de `slapd` y permite utilizar el nombre `ldapserver` en las conexiones LDAP.
-
-**Captura 7 — Contenido de `/etc/hosts`**
+#### Evidencia de `/etc/hosts`
 
 ```bash
 cat /etc/hosts
 ```
 
-`[ INSERTAR CAPTURA ]`
+![Figura 6 — Resolución local configurada](./Captura-de-pantalla-2026-10-09-183749.jpg)
 
-**Captura 8 — Resolución del FQDN**
+*Figura 6. Asociación de la IP `20.0.0.5` con el FQDN `ldapserver.planetafp.local` y el alias `ldapserver`.*
 
-```bash
-ping -c 3 ldapserver.planetafp.local
-```
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 9 — Resolución del alias**
+#### Verificación de FQDN y alias
 
 ```bash
-ping -c 3 ldapserver
+ping ldapserver.planetafp.local
+ping ldapserver
 ```
 
-`[ INSERTAR CAPTURA ]`
+![Figura 7 — Comprobación de resolución local](./Captura-de-pantalla-2026-10-09-183803.jpg)
+
+*Figura 7. El FQDN y el alias resuelven correctamente a la dirección `20.0.0.5`.*
 
 ---
 
-### Paso 3 — Instalación del software
+### Paso 3. Actualización de repositorios e instalación
 
-1. Actualizar los repositorios:
+Se actualizaron primero los repositorios del sistema:
 
 ```bash
 sudo apt update
 ```
 
-2. Instalar OpenLDAP y las utilidades cliente:
+![Figura 8 — Actualización de repositorios](./Captura-de-pantalla-2026-10-09-183821.jpg)
+
+*Figura 8. Actualización correcta de los índices de paquetes de Ubuntu.*
+
+A continuación, se instalaron el servicio OpenLDAP y sus herramientas de administración:
 
 ```bash
 sudo apt install -y slapd ldap-utils libldap-common
 ```
 
-**Captura 10 — Actualización de repositorios**
+![Figura 9 — Instalación de OpenLDAP](./Captura-de-pantalla-2026-10-09-183857.jpg)
 
-```bash
-sudo apt update
-```
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 11 — Instalación de paquetes**
-
-```bash
-sudo apt install -y slapd ldap-utils libldap-common
-```
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 12 — Verificación de paquetes**
-
-```bash
-dpkg -l | grep -E "slapd|ldap-utils|libldap"
-```
-
-`[ INSERTAR CAPTURA ]`
+*Figura 9. Confirmación de que `slapd`, `ldap-utils` y `libldap-common` están instalados y actualizados.*
 
 ---
 
-### Paso 4 — Reconfiguración del servicio `slapd`
+### Paso 4. Reconfiguración del servicio `slapd`
 
-Se ejecuta el asistente de reconfiguración:
+Se ejecutó el asistente de configuración de OpenLDAP:
 
 ```bash
 sudo dpkg-reconfigure slapd
 ```
 
-**Respuestas utilizadas:**
+Las opciones configuradas fueron las siguientes:
 
-| Pregunta | Respuesta |
+| Pregunta del asistente | Respuesta seleccionada |
 |---|---|
-| ¿Omitir la configuración del servidor OpenLDAP? | **No** |
-| Nombre del dominio DNS | `planetafp.local` |
+| Omitir la configuración del servidor OpenLDAP | No |
+| Nombre DNS del dominio | `planetafp.local` |
 | Nombre de la organización | `planetafp` |
-| Contraseña del administrador | Contraseña segura establecida durante la práctica |
-| Confirmación de contraseña | La misma contraseña |
-| Motor de base de datos | **MDB** |
-| ¿Eliminar la base de datos al purgar `slapd`? | **No** |
-| ¿Mover la base de datos antigua? | **Sí** |
-| ¿Permitir el protocolo LDAPv2? | **No** |
+| Contraseña del administrador LDAP | Configurada durante la práctica |
+| Motor de base de datos | MDB |
+| Eliminar la base de datos al purgar `slapd` | No |
+| Mover la base de datos anterior | Sí |
+| Permitir LDAPv2 | No |
 
-Como resultado, se crea la base del directorio:
+El dominio LDAP definido da lugar a la siguiente base DN:
 
 ```text
 dc=planetafp,dc=local
 ```
 
-y la cuenta administradora:
+La cuenta de administración del directorio es:
 
 ```text
 cn=admin,dc=planetafp,dc=local
 ```
 
-**Capturas 13 a 17 — Proceso interactivo**
+#### Dominio LDAP
 
-`[ INSERTAR CAPTURA: Omitir configuración = No ]`  
-`[ INSERTAR CAPTURA: Dominio planetafp.local ]`  
-`[ INSERTAR CAPTURA: Organización planetafp ]`  
-`[ INSERTAR CAPTURA: Contraseña administrador ]`  
-`[ INSERTAR CAPTURA: No eliminar base de datos al purgar ]`
+![Figura 10 — Dominio LDAP configurado](./Captura-de-pantalla-2026-10-09-184056.jpg)
+
+*Figura 10. Configuración del nombre de dominio DNS `planetafp.local`.*
+
+#### Organización LDAP
+
+![Figura 11 — Organización configurada](./Captura-de-pantalla-2026-10-09-184048.jpg)
+
+*Figura 11. Configuración de la organización `planetafp`.*
+
+#### Conservación de la base de datos
+
+![Figura 12 — No eliminar la base de datos al purgar](./Captura-de-pantalla-2026-10-09-184121.jpg)
+
+*Figura 12. Se seleccionó la opción `No` para conservar la base de datos si `slapd` se purga.*
+
+#### Movimiento de la base anterior
+
+![Figura 13 — Mover base de datos antigua](./Captura-de-pantalla-2026-10-09-184401.jpg)
+
+*Figura 13. Se seleccionó `Yes` para mover los archivos de una base de datos anterior antes de crear una nueva.*
 
 ---
 
 ## C. Verificación y Comprobación
 
-### C.1. Estado del servicio
+### C.1. Estado del servicio LDAP
+
+Se comprobó que el daemon OpenLDAP se hubiera iniciado correctamente:
 
 ```bash
 sudo systemctl status slapd
 ```
 
-Resultado esperado:
+![Figura 14 — Estado activo de slapd](./Captura-de-pantalla-2026-10-09-184421.jpg)
 
-```text
-Active: active (running)
-```
+*Figura 14. El servicio `slapd` se encuentra en estado `active (running)`.*
 
-**Captura 18 — Estado del servicio**
+### C.2. Puerto LDAP en escucha
 
-`[ INSERTAR CAPTURA ]`
-
-### C.2. Comprobación del arranque automático
-
-```bash
-sudo systemctl is-enabled slapd
-```
-
-Resultado esperado:
-
-```text
-enabled
-```
-
-**Captura 19 — Servicio habilitado**
-
-`[ INSERTAR CAPTURA ]`
-
-### C.3. Puerto LDAP en escucha
+Se verificó que el servicio estuviera escuchando en el puerto LDAP estándar, TCP 389:
 
 ```bash
 sudo ss -lntp | grep 389
 ```
 
-**Captura 20 — Puerto 389**
+![Figura 15 — Puerto LDAP 389 en escucha](./Captura-de-pantalla-2026-10-09-185217.jpg)
 
-`[ INSERTAR CAPTURA ]`
+*Figura 15. El proceso `slapd` escucha en el puerto `389` para IPv4 (`0.0.0.0:389`) e IPv6 (`[::]:389`).*
 
-### C.4. Consulta de la base del directorio
+### C.3. Verificación de la base DN
+
+Se consultó el contenido de la base LDAP:
 
 ```bash
 ldapsearch -x -LLL -b dc=planetafp,dc=local
 ```
 
-Resultado esperado:
+![Figura 16 — Base DN de OpenLDAP](./Captura-de-pantalla-2026-10-09-185249.jpg)
 
-```text
-dn: dc=planetafp,dc=local
-objectClass: top
-objectClass: dcObject
-objectClass: organization
-o: planetafp
-dc: planetafp
+*Figura 16. La base del directorio LDAP contiene la entrada raíz `dc=planetafp,dc=local`, con la organización `planetafp`.*
 
-dn: cn=admin,dc=planetafp,dc=local
-```
+### C.4. Esquemas LDAP disponibles
 
-**Captura 21 — Base DN creada**
-
-`[ INSERTAR CAPTURA ]`
-
-### C.5. Esquemas disponibles
+Se verificaron los esquemas disponibles en el sistema:
 
 ```bash
 ls -l /etc/ldap/schema/
 ```
 
-**Captura 22 — Esquemas del sistema**
+![Figura 17 — Esquemas disponibles](./Captura-de-pantalla-2026-10-09-185320.jpg)
 
-`[ INSERTAR CAPTURA ]`
-
-### C.6. Esquemas cargados en la configuración
-
-```bash
-sudo ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=config dn
-```
-
-**Captura 23 — Esquemas cargados**
-
-`[ INSERTAR CAPTURA ]`
+*Figura 17. Esquemas LDAP disponibles, incluyendo `core`, `cosine`, `inetorgperson`, `nis` y otros.*
 
 ---
 
@@ -380,13 +308,13 @@ sudo ldapsearch -Q -LLL -Y EXTERNAL -H ldapi:/// -b cn=config dn
 
 ### D.1. Creación del fichero LDIF
 
-Se crea el archivo:
+Se creó el fichero `estructura-inicial.ldif` para generar una estructura inicial en el directorio.
 
-```bash
-nano estructura-inicial.ldif
-```
+El fichero crea:
 
-Contenido:
+- La unidad organizativa `ou=personas`.
+- El usuario `uid=raul`.
+- El usuario se basa en las clases `inetOrgPerson` y `posixAccount`.
 
 ```ldif
 dn: ou=personas,dc=planetafp,dc=local
@@ -404,45 +332,41 @@ mail: raul@planetafp.local
 uidNumber: 10001
 gidNumber: 10001
 homeDirectory: /home/raul
-userPassword: {SSHA}ContrasenaSegura
+userPassword: {SSHA}CambiarEstaContrasena
 ```
 
-**Captura 24 — Fichero LDIF**
+> La contraseña indicada en el LDIF es un valor de prueba. En un entorno de producción, debe utilizarse un hash generado con `slappasswd` y nunca una contraseña en texto plano.
 
-```bash
-cat estructura-inicial.ldif
-```
+![Figura 18 — Fichero LDIF inicial](./Captura-de-pantalla-2026-10-09-185306.jpg)
 
-`[ INSERTAR CAPTURA ]`
+*Figura 18. Contenido del fichero `estructura-inicial.ldif` utilizado para crear la OU y el usuario de prueba.*
 
-### D.2. Inserción con `ldapadd`
+### D.2. Inserción de entradas mediante `ldapadd`
+
+Se cargó el fichero LDIF usando autenticación simple y bind autenticado como administrador:
 
 ```bash
 ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
 ```
 
-Parámetros utilizados:
+Significado de los parámetros:
 
-- `-x`: autenticación simple.
-- `-D`: DN del administrador para realizar el bind.
-- `-W`: solicita la contraseña de forma interactiva.
-- `-f`: indica el fichero LDIF desde el que se cargarán las entradas.
+| Parámetro | Descripción |
+|---|---|
+| `-x` | Utiliza autenticación simple |
+| `-D` | Especifica el DN de la cuenta que realiza el bind |
+| `-W` | Solicita la contraseña de forma interactiva |
+| `-f` | Carga los datos desde el fichero LDIF indicado |
 
-**Captura 25 — Alta de la OU y usuario**
+La operación creó correctamente la OU y el usuario LDAP.
 
-`[ INSERTAR CAPTURA ]`
+![Figura 19 — Inserción correcta con ldapadd](./Captura-de-pantalla-2026-10-09-185530.jpg)
 
-Salida esperada:
+*Figura 19. Alta correcta de `ou=personas` y `uid=raul` mediante `ldapadd`.*
 
-```text
-adding new entry "ou=personas,dc=planetafp,dc=local"
+### D.3. Búsqueda por identificador de usuario
 
-adding new entry "uid=raul,ou=personas,dc=planetafp,dc=local"
-```
-
-### D.3. Consulta con `ldapsearch`
-
-Búsqueda del usuario por UID:
+Se realizó una búsqueda delimitando la base, el ámbito y el filtro por UID:
 
 ```bash
 ldapsearch -x -LLL \
@@ -451,11 +375,13 @@ ldapsearch -x -LLL \
   "(uid=raul)"
 ```
 
-**Captura 26 — Búsqueda por UID**
+![Figura 20 — Búsqueda LDAP por uid](./Captura-de-pantalla-2026-10-09-185858.jpg)
 
-`[ INSERTAR CAPTURA ]`
+*Figura 20. Resultado de la consulta LDAP para el usuario cuyo atributo `uid` es `raul`.*
 
-Búsqueda por clase de objeto:
+### D.4. Búsqueda por clase de objeto
+
+También se realizó una búsqueda sobre toda la base del directorio para recuperar las entradas de tipo `inetOrgPerson`:
 
 ```bash
 ldapsearch -x -LLL \
@@ -464,124 +390,149 @@ ldapsearch -x -LLL \
   "(objectClass=inetOrgPerson)"
 ```
 
-**Captura 27 — Búsqueda por objectClass**
+![Figura 21 — Búsqueda por objectClass](./Captura-de-pantalla-2026-10-09-185949.jpg)
 
-`[ INSERTAR CAPTURA ]`
+*Figura 21. Consulta LDAP filtrada por la clase de objeto `inetOrgPerson`.*
 
-### D.4. Comprobación del bind administrador
+### D.5. Verificación de identidad del administrador
+
+Se comprobó el bind autenticado del administrador LDAP:
 
 ```bash
 ldapwhoami -x -D "cn=admin,dc=planetafp,dc=local" -W
 ```
 
-**Captura 28 — Identidad del administrador**
+![Figura 22 — Bind correcto del administrador](./Captura-de-pantalla-2026-10-09-190041.jpg)
 
-`[ INSERTAR CAPTURA ]`
+*Figura 22. El comando `ldapwhoami` confirma que la identidad autenticada es `cn=admin,dc=planetafp,dc=local`.*
 
 ---
 
 ## E. Control de Errores y Troubleshooting
 
-### E.1. Fallo 1: Entrada duplicada — `Already exists (68)`
+### E.1. Error: entrada duplicada `Already exists (68)`
 
-**Error observado:**
+Durante una prueba se intentó volver a crear la entrada:
+
+```text
+uid=prueba,ou=personas,dc=planetafp,dc=local
+```
+
+El comando utilizado fue:
+
+```bash
+ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f error-sintaxis.ldif
+```
+
+La operación devolvió:
 
 ```text
 ldap_add: Already exists (68)
 ```
 
-**Causa:**
+El error indica que el DN solicitado ya existe en el directorio. LDAP no permite crear dos entradas con el mismo DN.
 
-El error se produjo al ejecutar nuevamente el comando `ldapadd` con el fichero `estructura-inicial.ldif`. Las entradas `ou=personas,dc=planetafp,dc=local` y `uid=raul,ou=personas,dc=planetafp,dc=local` ya existían en el directorio, por lo que OpenLDAP impidió crear un DN duplicado.
+![Figura 23 — Error de entrada duplicada](./Captura-de-pantalla-2026-10-09-185530.jpg)
 
-**Comando que provocó el error:**
+> **Nota:** sustituye la ruta de esta imagen por la captura exacta donde aparezca `uid=prueba` y `ldap_add: Already exists (68)`. En tu lista, esta es la captura tomada a las `19:00:41` o la que se corresponda visualmente con el error. Si usas la captura subida como primera imagen del chat, nómbrala `error-already-exists.jpg` y emplea esta ruta:
 
-```bash
-ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
+```markdown
+
 ```
 
-**Diagnóstico:**
+**Causa:** la entrada ya había sido insertada con anterioridad.
+
+**Diagnóstico recomendado:**
 
 ```bash
-ldapsearch -x -LLL -b dc=planetafp,dc=local
+ldapsearch -x -LLL \
+  -b "ou=personas,dc=planetafp,dc=local" \
+  "(uid=prueba)"
 ```
 
-La consulta confirmó que la entrada ya existía.
+**Solución posible 1: modificar la entrada existente**
 
-**Solución aplicada:**
+Para cambiar atributos de una entrada existente se debe utilizar `ldapmodify`, no `ldapadd`.
 
-Se eliminó la entrada duplicada antes de volver a crearla:
+**Solución posible 2: eliminar y volver a crear**
 
 ```bash
 ldapdelete -x -D "cn=admin,dc=planetafp,dc=local" -W \
-  "uid=raul,ou=personas,dc=planetafp,dc=local"
+  "uid=prueba,ou=personas,dc=planetafp,dc=local"
 ```
 
-Posteriormente se volvió a insertar:
-
-```bash
-ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
-```
-
-**Comprobación final:**
-
-```bash
-ldapsearch -x -LLL -b ou=personas,dc=planetafp,dc=local "(uid=raul)"
-```
-
-**Captura 29 — Error `Already exists (68)`**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 30 — Comprobación de que la entrada existía**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 31 — Solución aplicada**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 32 — Verificación final**
-
-`[ INSERTAR CAPTURA ]`
+Después se puede ejecutar de nuevo `ldapadd` con el LDIF correspondiente.
 
 ---
 
-### E.2. Fallo 2: Servicio `slapd` detenido — `Can't contact LDAP server (-1)`
+### E.2. Error: credenciales incorrectas `Invalid credentials (49)`
 
-**Error observado:**
-
-```text
-ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)
-```
-
-**Causa:**
-
-El demonio `slapd` fue detenido manualmente con `systemctl stop slapd`. Al no estar activo, el cliente LDAP no pudo establecer conexión con el servidor en el puerto 389.
-
-**Comandos que provocaron el error:**
+En una operación de inserción se produjo el siguiente error:
 
 ```bash
-sudo systemctl stop slapd
-ldapsearch -x -LLL -b dc=planetafp,dc=local
-```
-
-**Diagnóstico:**
-
-```bash
-sudo systemctl status slapd
+ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
 ```
 
 Salida obtenida:
 
 ```text
-Active: inactive (dead)
+ldap_bind: Invalid credentials (49)
 ```
 
-También se comprobó que el puerto 389 no estaba en escucha:
+El error se produjo porque se introdujo una contraseña incorrecta para el administrador LDAP.
+
+![Figura 24 — Error de credenciales LDAP](./Captura-de-pantalla-2026-10-09-185858.jpg)
+
+> **Nota:** sustituye la ruta de esta imagen por la captura donde aparezca literalmente `ldap_bind: Invalid credentials (49)`. Renómbrala como `error-invalid-credentials.jpg` y usa:
+
+```markdown
+
+```
+
+**Diagnóstico y comprobación:**
+
+Para comprobar si el DN es correcto y validar las credenciales se ejecutó:
 
 ```bash
-sudo ss -lntp | grep 389
+ldapwhoami -x -D "cn=admin,dc=planetafp,dc=local" -W
+```
+
+La salida correcta fue:
+
+```text
+dn:cn=admin,dc=planetafp,dc=local
+```
+
+Esto confirmó que la cuenta administradora y el servicio estaban configurados correctamente; el problema se solucionó introduciendo la contraseña correcta.
+
+![Figura 25 — Credenciales corregidas](./Captura-de-pantalla-2026-10-09-190041.jpg)
+
+*Figura 25. Verificación correcta de la identidad del administrador con `ldapwhoami`.*
+
+---
+
+### E.3. Error: servidor LDAP no accesible
+
+En una prueba con el servicio `slapd` detenido se ejecutó:
+
+```bash
+ldapsearch -x -LLL -b dc=planetafp,dc=local
+```
+
+La salida fue:
+
+```text
+ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)
+```
+
+Este error se produce cuando el servicio LDAP está detenido o no está disponible en el puerto 389.
+
+![Figura 26 — Error de contacto con el servidor LDAP](./Captura-de-pantalla-2026-10-09-185949.jpg)
+
+> **Nota:** sustituye la ruta de esta imagen por la captura que muestra `Can't contact LDAP server (-1)`. Renómbrala como `error-cant-contact-ldap.jpg` y usa:
+
+```markdown
+
 ```
 
 **Solución aplicada:**
@@ -590,52 +541,22 @@ sudo ss -lntp | grep 389
 sudo systemctl start slapd
 ```
 
-**Comprobación de la solución:**
+**Verificación posterior:**
 
 ```bash
 sudo systemctl status slapd
-```
-
-Salida esperada:
-
-```text
-Active: active (running)
-```
-
-Verificación del acceso al directorio:
-
-```bash
+sudo ss -lntp | grep 389
 ldapsearch -x -LLL -b dc=planetafp,dc=local
 ```
 
-**Captura 33 — Detención del servicio**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 34 — Servicio parado**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 35 — Error de conexión LDAP**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 36 — Arranque del servicio**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 37 — Servicio activo**
-
-`[ INSERTAR CAPTURA ]`
-
-**Captura 38 — Búsqueda LDAP correcta**
-
-`[ INSERTAR CAPTURA ]`
+La recuperación queda demostrada en las figuras 14, 15 y 16, donde el servicio aparece en estado `active (running)`, el puerto 389 está en escucha y la consulta LDAP devuelve la entrada raíz del directorio.
 
 ---
 
-## Conclusión técnica
+## Conclusión
 
-Se ha desplegado correctamente un servidor OpenLDAP en Ubuntu Server sobre VirtualBox, con dirección IP estática `20.0.0.5/24`, resolución local del FQDN `ldapserver.planetafp.local` e instalación de los paquetes `slapd` y `ldap-utils`.
+Se ha desplegado y configurado correctamente un servidor OpenLDAP en Ubuntu Server 24.04.5 LTS dentro de una máquina virtual VirtualBox. El servidor tiene configurada la IP estática `20.0.0.5/24`, resolución local para `ldapserver.planetafp.local` y una base LDAP correspondiente al dominio `planetafp.local`.
 
-El directorio `dc=planetafp,dc=local` ha sido configurado, verificado y poblado con una unidad organizativa y un usuario de prueba. Además, se han documentado dos incidencias reales: una entrada duplicada y la detención del servicio `slapd`, incluyendo su diagnóstico y solución.
+La base `dc=planetafp,dc=local` se verificó correctamente y fue poblada mediante un archivo LDIF con la unidad organizativa `ou=personas` y el usuario `uid=raul`. Las operaciones de inserción, búsqueda y autenticación se realizaron satisfactoriamente con `ldapadd`, `ldapsearch` y `ldapwhoami`.
+
+También se documentaron errores de entradas duplicadas, credenciales incorrectas y falta de conectividad con el servidor LDAP, indicando su causa, diagnóstico y solución.
