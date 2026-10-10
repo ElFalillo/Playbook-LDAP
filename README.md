@@ -51,7 +51,7 @@ Se comprobó la versión del sistema operativo antes de iniciar el despliegue.
 lsb_release -a
 ```
 
-![Figura 1 — Información del sistema Ubuntu Server](./Captura-de-pantalla-2026-10-09-183525.jpg)
+![Figura 1 — Información del sistema Ubuntu Server](Captura-de-pantalla-2026-10-09-183525.jpg)
 
 *Figura 1. Ubuntu Server 24.04.5 LTS, nombre en clave `noble`.*
 
