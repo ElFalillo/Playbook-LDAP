@@ -42,18 +42,6 @@ lsb_release -a
 
 *La captura corresponde a la comprobación de Ubuntu Server 24.04.5 LTS.*
 
-### 1.2. Comprobar los paquetes LDAP instalados
-
-Se consultaron los paquetes relacionados con OpenLDAP:
-
-```bash
-dpkg -l | grep -E "slapd|ldap-utils|libldap"
-```
-
-![Paquetes LDAP instalados](capturas/Captura%20de%20pantalla%202026-10-09%20183646.png)
-
-*La captura debe mostrar los paquetes LDAP instalados, como `slapd`, `ldap-utils` y las bibliotecas `libldap`.*
-
 ---
 
 ## 2. Configuración de red
@@ -150,6 +138,18 @@ sudo apt install -y slapd ldap-utils libldap-common
 ![Instalación de OpenLDAP](capturas/Captura%20de%20pantalla%202026-10-09%20183857.png)
 
 *La captura corresponde a la instalación de `slapd`, `ldap-utils` y `libldap-common`.*
+
+### 4.3. Comprobar los paquetes instalados
+
+Después de la instalación, se verificó que los paquetes relacionados con OpenLDAP estuvieran instalados:
+
+```bash
+dpkg -l | grep -E "slapd|ldap-utils|libldap"
+```
+
+![Paquetes LDAP instalados](capturas/Captura%20de%20pantalla%202026-10-09%20183646.png)
+
+*La captura muestra los paquetes LDAP instalados, como `slapd`, `ldap-utils` y las bibliotecas `libldap`.*
 
 ---
 
