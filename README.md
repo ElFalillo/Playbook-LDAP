@@ -316,9 +316,3 @@ El servidor rechazó la operación porque la entrada uid=prueba,ou=personas,dc=p
 
 Usando ldapsearch -x -LLL comprobamos que la entrada uid=prueba ya existía en el directorio.
 
-## Conclusión
-
-Se instaló OpenLDAP en Ubuntu Server 24.04.5 LTS, se configuró el dominio `planetafp.local` y se creó la base `dc=planetafp,dc=local`.
-Se añadieron una unidad organizativa y un usuario de prueba, y se realizaron verificaciones del servicio, consultas LDAP y pruebas de autenticación.
-En el final se documentaron incidencias durante el proceso.
-
