@@ -50,7 +50,7 @@ Se consultaron los paquetes relacionados con OpenLDAP:
 dpkg -l | grep -E "slapd|ldap-utils|libldap"
 ```
 
-![Paquetes LDAP instalados](capturas/Captura%20de%20pantalla%202026-10-09%20183539.png)
+![Paquetes LDAP instalados](capturas/Captura%20de%20pantalla%202026-10-09%20183646.png)
 
 *La captura debe mostrar los paquetes LDAP instalados, como `slapd`, `ldap-utils` y las bibliotecas `libldap`.*
 
@@ -74,9 +74,6 @@ Se aplicaron los cambios con:
 sudo netplan apply
 ```
 
-![Configuración estática de Netplan](capturas/Captura%20de%20pantalla%202026-10-09%20183551.png)
-
-*La captura muestra el archivo de Netplan con la configuración de `enp0s3`, la dirección estática, la ruta por defecto y los DNS.*
 
 ### 2.2. Verificar la dirección IP
 
@@ -84,7 +81,7 @@ sudo netplan apply
 ip a
 ```
 
-![Verificación de la interfaz y dirección IP](capturas/Captura%20de%20pantalla%202026-10-09%20183646.png)
+![Verificación de la interfaz y dirección IP](capturas/Captura%20de%20pantalla%202026-10-09%20183539.png)
 
 *La captura se utiliza para verificar la dirección asignada a `enp0s3`.*
 
@@ -94,7 +91,7 @@ ip a
 ip route
 ```
 
-![Verificación de rutas](capturas/Captura%20de%20pantalla%202026-10-09%20183714.png)
+![Verificación de rutas](capturas/Captura%20de%20pantalla%202026-10-09%20183551.png)
 
 *La captura se utiliza para comprobar la ruta por defecto a través de `20.0.0.1`.*
 
@@ -116,7 +113,7 @@ Esta entrada permite utilizar el FQDN y el alias corto para localizar el servido
 cat /etc/hosts
 ```
 
-![Entrada local de /etc/hosts](capturas/Captura%20de%20pantalla%202026-10-09%20183749.png)
+![Entrada local de /etc/hosts](capturas/Captura%20de%20pantalla%202026-10-09%20183803.png)
 
 *La captura debe mostrar la asociación de `20.0.0.5` con `ldapserver.planetafp.local` y `ldapserver`.*
 
@@ -127,7 +124,7 @@ ping ldapserver.planetafp.local
 ping ldapserver
 ```
 
-![Pruebas de resolución de nombres](capturas/Captura%20de%20pantalla%202026-10-09%20183803.png)
+![Pruebas de resolución de nombres](capturas/Captura%20de%20pantalla%202026-10-09%20183749.png)
 
 *La captura se utiliza para comprobar la resolución del FQDN y del alias.*
 
@@ -192,27 +189,17 @@ cn=admin,dc=planetafp,dc=local
 
 ### 5.1. Organización
 
-![Configuración de la organización](capturas/Captura%20de%20pantalla%202026-10-09%20184048.png)
+![Configuración de la organización](capturas/Captura%20de%20pantalla%202026-10-09%20183931.png)
 
 *Captura asociada a la selección de la organización `planetafp`.*
 
 ### 5.2. Dominio LDAP
 
-![Configuración del dominio LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20184056.png)
+![Configuración del dominio LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20183923.png)
 
 *Captura asociada al dominio `planetafp.local`.*
 
-### 5.3. Conservación de la base de datos
 
-![Opción de conservación de la base de datos](capturas/Captura%20de%20pantalla%202026-10-09%20184121.png)
-
-*Captura asociada a la pregunta sobre conservar o eliminar la base de datos al purgar `slapd`.*
-
-### 5.4. Movimiento de la base anterior
-
-![Opción de movimiento de la base anterior](capturas/Captura%20de%20pantalla%202026-10-09%20184401.png)
-
-*Captura asociada a la pregunta sobre mover una base de datos anterior.*
 
 ---
 
@@ -224,7 +211,7 @@ cn=admin,dc=planetafp,dc=local
 sudo systemctl status slapd
 ```
 
-![Estado del servicio slapd](capturas/Captura%20de%20pantalla%202026-10-09%20184421.png)
+![Estado del servicio slapd](capturas/Captura%20de%20pantalla%202026-10-09%20184121.png)
 
 *Usar esta captura para documentar el estado que devuelve `systemctl status slapd`.*
 
@@ -234,7 +221,7 @@ sudo systemctl status slapd
 sudo ss -lntp | grep 389
 ```
 
-![Comprobación del puerto LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20185217.png)
+![Comprobación del puerto LDAP]
 
 *Usar esta captura para documentar la comprobación de TCP 389.*
 
@@ -244,7 +231,7 @@ sudo ss -lntp | grep 389
 ldapsearch -x -LLL -b "dc=planetafp,dc=local"
 ```
 
-![Consulta de la base DN](capturas/Captura%20de%20pantalla%202026-10-09%20185249.png)
+![Consulta de la base DN](capturas/Captura%20de%20pantalla%202026-10-09%20184401.png)
 
 *Usar esta captura para documentar la consulta de la entrada raíz del directorio.*
 
@@ -254,7 +241,7 @@ ldapsearch -x -LLL -b "dc=planetafp,dc=local"
 ls -l /etc/ldap/schema/
 ```
 
-![Esquemas LDAP disponibles](capturas/Captura%20de%20pantalla%202026-10-09%20185320.png)
+![Esquemas LDAP disponibles](capturas/Captura%20de%20pantalla%202026-10-09%20184421.png)
 
 *La captura debe mostrar los esquemas disponibles, entre ellos `core`, `cosine`, `inetorgperson` y `nis`.*
 
@@ -266,30 +253,13 @@ ls -l /etc/ldap/schema/
 
 El archivo `estructura-inicial.ldif` crea la OU `ou=personas` y el usuario `uid=raul`.
 
-```ldif
-dn: ou=personas,dc=planetafp,dc=local
-objectClass: organizationalUnit
-ou: personas
-
-dn: uid=raul,ou=personas,dc=planetafp,dc=local
-objectClass: inetOrgPerson
-objectClass: posixAccount
-uid: raul
-cn: Raul Ortiz
-sn: Ortiz
-givenName: Raul
-mail: raul@planetafp.local
-uidNumber: 10001
-gidNumber: 10001
-homeDirectory: /home/raul
-userPassword: {SSHA}CambiarEstaContrasena
-```
+![Archivo LDIF inicial](capturas/Captura%20de%20pantalla%202026-10-09%20185217.png)
 
 > La contraseña del LDIF es un valor de prueba. Para un entorno real, se debe generar un hash con `slappasswd` y no guardar contraseñas en texto plano.
 
-![Archivo LDIF inicial](capturas/Captura%20de%20pantalla%202026-10-09%20185306.png)
-
 *La captura corresponde a la edición o revisión del archivo LDIF inicial.*
+
+
 
 ### 7.2. Añadir las entradas al directorio
 
@@ -304,7 +274,7 @@ ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
 | `-W` | Solicita la contraseña de forma interactiva |
 | `-f` | Lee las entradas desde el archivo LDIF |
 
-![Inserción de entradas LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20185530.png)
+![Inserción de entradas LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20185249.png)
 
 *La captura corresponde a la ejecución de `ldapadd` para cargar la OU y el usuario.*
 
@@ -317,111 +287,27 @@ ldapsearch -x -LLL \
   "(uid=raul)"
 ```
 
-![Búsqueda LDAP por UID](capturas/Captura%20de%20pantalla%202026-10-09%20185858.png)
+![Búsqueda LDAP por UID](capturas/Captura%20de%20pantalla%202026-10-09%20185306.png)
 
 *La captura corresponde a la búsqueda del usuario `raul` por su atributo `uid`.*
 
-### 7.4. Buscar por clase de objeto
-
-```bash
-ldapsearch -x -LLL \
-  -b "dc=planetafp,dc=local" \
-  -s sub \
-  "(objectClass=inetOrgPerson)"
-```
-
-![Búsqueda por clase de objeto](capturas/Captura%20de%20pantalla%202026-10-09%20185949.png)
-
-*La captura corresponde a la búsqueda de entradas `inetOrgPerson`.*
-
-### 7.5. Comprobar la identidad administrativa
+### 7.4. Comprobar la identidad administrativa
 
 ```bash
 ldapwhoami -x -D "cn=admin,dc=planetafp,dc=local" -W
 ```
 
-![Identidad autenticada del administrador](capturas/Captura%20de%20pantalla%202026-10-09%20190041.png)
+![Identidad autenticada del administrador](capturas/Captura%20de%20pantalla%202026-10-09%20185530.png)
 
 *La captura corresponde a la comprobación del bind administrativo con `ldapwhoami`.*
 
 ---
 
-## 8. Errores y resolución de problemas
 
-### 8.1. Entrada duplicada: `Already exists (68)`
-
-Se intentó volver a añadir una entrada que ya existía:
-
-```bash
-ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f error-sintaxis.ldif
-```
-
-DN de la entrada de prueba:
-
-```text
-uid=prueba,ou=personas,dc=planetafp,dc=local
-```
-
-Respuesta del servidor:
-
-```text
-ldap_add: Already exists (68)
-```
-
-![Error de entrada duplicada](capturas/Captura%20de%20pantalla%202026-10-09%20183923.png)
-
-Para comprobar si la entrada existe:
-
-```bash
-ldapsearch -x -LLL \
-  -b "ou=personas,dc=planetafp,dc=local" \
-  "(uid=prueba)"
-```
-
-Para modificar una entrada existente se utiliza `ldapmodify`, no `ldapadd`. Si hay que eliminarla y recrearla:
-
-```bash
-ldapdelete -x -D "cn=admin,dc=planetafp,dc=local" -W \
-  "uid=prueba,ou=personas,dc=planetafp,dc=local"
-```
-
-### 8.2. Credenciales incorrectas: `Invalid credentials (49)`
-
-```text
-ldap_bind: Invalid credentials (49)
-```
-
-![Error de credenciales LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20183931.png)
-
-El servidor rechazó el bind porque la contraseña introducida para `cn=admin,dc=planetafp,dc=local` no era válida. Después se comprobó el bind con la contraseña correcta:
-
-```bash
-ldapwhoami -x -D "cn=admin,dc=planetafp,dc=local" -W
-```
-
-### 8.3. Servidor LDAP no accesible
-
-Si `slapd` está detenido, una consulta puede devolver:
-
-```text
-ldap_sasl_bind(SIMPLE): Can't contact LDAP server (-1)
-```
-
-![Error de conexión con el servidor LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20184327.png)
-
-Iniciar el servicio y volver a comprobarlo:
-
-```bash
-sudo systemctl start slapd
-sudo systemctl status slapd
-sudo ss -lntp | grep 389
-ldapsearch -x -LLL -b "dc=planetafp,dc=local"
-```
-
----
 
 ## Conclusión
 
-Se instaló OpenLDAP en Ubuntu Server 24.04.5 LTS, se configuró el dominio `planetafp.local` y se creó la base `dc=planetafp,dc=local`. Se añadieron una unidad organizativa y un usuario de prueba, y se realizaron verificaciones del servicio, consultas LDAP y pruebas de autenticación.
+Se instaló OpenLDAP en Ubuntu Server 24.04.5 LTS, se configuró el dominio `planetafp.local` y se creó la base `dc=planetafp,dc=local`.
+Se añadieron una unidad organizativa y un usuario de prueba, y se realizaron verificaciones del servicio, consultas LDAP y pruebas de autenticación.
 
-También se documentaron incidencias de entrada duplicada, credenciales incorrectas y servicio LDAP no disponible, junto con los comandos de diagnóstico y recuperación.
+
