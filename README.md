@@ -74,7 +74,6 @@ Se aplicaron los cambios con:
 sudo netplan apply
 ```
 
-
 ### 2.2. Verificar la dirección IP
 
 ```bash
@@ -199,8 +198,6 @@ cn=admin,dc=planetafp,dc=local
 
 *Captura asociada al dominio `planetafp.local`.*
 
-
-
 ---
 
 ## 6. Verificación del servicio LDAP
@@ -258,8 +255,6 @@ El archivo `estructura-inicial.ldif` crea la OU `ou=personas` y el usuario `uid=
 > La contraseña del LDIF es un valor de prueba. Para un entorno real, se debe generar un hash con `slappasswd` y no guardar contraseñas en texto plano.
 
 *La captura corresponde a la edición o revisión del archivo LDIF inicial.*
-
-
 
 ### 7.2. Añadir las entradas al directorio
 
