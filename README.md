@@ -221,7 +221,7 @@ sudo systemctl status slapd
 sudo ss -lntp | grep 389
 ```
 
-![Comprobación del puerto LDAP]
+![Comprobación del puerto LDAP](capturas/Captura%20de%20pantalla%202026-10-09%20184327.png)
 
 *Usar esta captura para documentar la comprobación de TCP 389.*
 
