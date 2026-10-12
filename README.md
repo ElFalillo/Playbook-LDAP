@@ -1,5 +1,5 @@
 <details>
-<summary><h2><b> 👩‍💻 LDAP/SERVER </b></h2></summary>
+<summary><h2><b> 👩‍💻LDAP/SERVER </b></h2></summary>
 
 # Playbook de despliegue técnico
 ## Instalación y configuración de OpenLDAP
@@ -303,11 +303,44 @@ ldapwhoami -x -D "cn=admin,dc=planetafp,dc=local" -W
 
 ---
 
+## 8. Incidencias y resolución
 
+En esta sección se documentan dos errores observados durante la práctica. Añade debajo de cada incidencia la captura correspondiente cuando esté disponible.
+
+### 8.1. Error de sintaxis en el fichero LDIF
+
+Al intentar cargar el fichero LDIF, el servidor rechazó la operación por un error de sintaxis. En este caso, revisa que cada atributo tenga el formato `atributo: valor`, que los nombres de atributos y clases estén escritos correctamente y que haya una línea en blanco entre entradas.
+
+Comando usado para cargar el fichero:
+
+```bash
+ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
+```
+
+Revisa el mensaje exacto que devuelve `ldapadd` y corrige la línea señalada en el archivo. Vuelve a ejecutar el comando solo después de guardar la corrección.
+
+<!-- Añadir aquí la captura del error de sintaxis LDIF -->
+
+### 8.2. La entrada o bind ya estaba creado
+
+Al volver a ejecutar `ldapadd` con una entrada que ya existía, el servidor rechazó el alta. LDAP no permite dos entradas con el mismo DN; la respuesta habitual es `Already exists (68)`. El bind autenticado identifica quién realiza la operación, mientras que el DN de la entrada en el LDIF es lo que se intenta crear.
+
+Comprobar primero si la entrada ya existe, sustituyendo el filtro si fuera necesario:
+
+```bash
+ldapsearch -x -LLL \
+  -b "dc=planetafp,dc=local" \
+  "(uid=raul)"
+```
+
+Si la entrada existe y se quiere cambiar, prepara un LDIF de modificación y usa `ldapmodify`. Si se necesita recrearla, elimínala primero con `ldapdelete` y después vuelve a ejecutar `ldapadd`; comprueba el DN antes de eliminar para no borrar otra entrada.
+
+<!-- Añadir aquí la captura del error de entrada/bind ya existente -->
+
+---
 
 ## Conclusión
 
 Se instaló OpenLDAP en Ubuntu Server 24.04.5 LTS, se configuró el dominio `planetafp.local` y se creó la base `dc=planetafp,dc=local`.
 Se añadieron una unidad organizativa y un usuario de prueba, y se realizaron verificaciones del servicio, consultas LDAP y pruebas de autenticación.
-
 
