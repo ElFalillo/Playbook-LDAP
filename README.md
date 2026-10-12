@@ -1,3 +1,6 @@
+<details>
+<summary><h2><b> 👩‍💻LDAP/SERVER </b></h2></summary>
+
 # Playbook de Despliegue Técnico
 ## Instalación, configuración y puesta en marcha de OpenLDAP
 
