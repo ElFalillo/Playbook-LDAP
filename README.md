@@ -307,40 +307,23 @@ ldapwhoami -x -D "cn=admin,dc=planetafp,dc=local" -W
 
 En esta sección se documentan dos errores observados durante la práctica. Añade debajo de cada incidencia la captura correspondiente cuando esté disponible.
 
-### 8.1. Error de sintaxis en el fichero LDIF
+### 8.1. credenciales inválidas en el bind LDAP
+Al ejecutar ldapadd, el cliente intentó autenticarse en el directorio usando el DN cn=admin,dc=planetafp,dc=local. El servidor respondió ldap_bind: Invalid credentials (49),por lo que no se autenticó la cuenta y no llegó a procesarse la inserción del fichero LDIF.
 
-Al intentar cargar el fichero LDIF, el servidor rechazó la operación por un error de sintaxis. En este caso, revisa que cada atributo tenga el formato `atributo: valor`, que los nombres de atributos y clases estén escritos correctamente y que haya una línea en blanco entre entradas.
+![Identidad autenticada del administrador](capturas/Captura%20de%20pantalla%202026-10-09%20185949.png)
 
-Comando usado para cargar el fichero:
+La incidencia se resolvió utilizando el DN administrativo correcto y la contraseña configurada para el directorio. Se verificó primero el bind con ldapwhoami y, tras autenticarse correctamente, se volvió a ejecutar ldapadd para cargar las entradas del fichero LDIF.
 
-```bash
-ldapadd -x -D "cn=admin,dc=planetafp,dc=local" -W -f estructura-inicial.ldif
-```
+### 8.2. Entrada LDAP ya existente
+El servidor rechazó la operación porque la entrada uid=prueba,ou=personas,dc=planetafp,dc=local ya existía.
 
-Revisa el mensaje exacto que devuelve `ldapadd` y corrige la línea señalada en el archivo. Vuelve a ejecutar el comando solo después de guardar la corrección.
+![Identidad autenticada del administrador](capturas/Captura%20de%20pantalla%202026-10-09%20190041.png)
 
-<!-- Añadir aquí la captura del error de sintaxis LDIF -->
-
-### 8.2. La entrada o bind ya estaba creado
-
-Al volver a ejecutar `ldapadd` con una entrada que ya existía, el servidor rechazó el alta. LDAP no permite dos entradas con el mismo DN; la respuesta habitual es `Already exists (68)`. El bind autenticado identifica quién realiza la operación, mientras que el DN de la entrada en el LDIF es lo que se intenta crear.
-
-Comprobar primero si la entrada ya existe, sustituyendo el filtro si fuera necesario:
-
-```bash
-ldapsearch -x -LLL \
-  -b "dc=planetafp,dc=local" \
-  "(uid=raul)"
-```
-
-Si la entrada existe y se quiere cambiar, prepara un LDIF de modificación y usa `ldapmodify`. Si se necesita recrearla, elimínala primero con `ldapdelete` y después vuelve a ejecutar `ldapadd`; comprueba el DN antes de eliminar para no borrar otra entrada.
-
-<!-- Añadir aquí la captura del error de entrada/bind ya existente -->
-
----
+Usando ldapsearch -x -LLL comprobamos que la entrada uid=prueba ya existía en el directorio.
 
 ## Conclusión
 
 Se instaló OpenLDAP en Ubuntu Server 24.04.5 LTS, se configuró el dominio `planetafp.local` y se creó la base `dc=planetafp,dc=local`.
 Se añadieron una unidad organizativa y un usuario de prueba, y se realizaron verificaciones del servicio, consultas LDAP y pruebas de autenticación.
+En el final se documentaron incidencias durante el proceso.
 
