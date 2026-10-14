@@ -4,7 +4,7 @@
 # Playbook de despliegue técnico
 ## Instalación y configuración de OpenLDAP
 
-**Autores:** Falillo y JAM  
+**Autores:** Raul y Jam  
 **Entorno:** Ubuntu Server 24.04.5 LTS en Oracle VirtualBox  
 **Servicio:** OpenLDAP  
 **Fecha de realización:** 09/10/2026
